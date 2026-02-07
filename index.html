@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#fff7ed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+    <title>3D Cube IQ - Brain Trainer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://connect.facebook.net/en_US/fbinstant.7.1.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="canvas-container" class="fixed inset-0"></div>
+
+    <!-- Game HUD (redesigned) -->
+    <div id="hud" class="hud-wrap hidden">
+        <div class="hud-top">
+            <button type="button" id="btn-game-back" class="hud-back" title="Home" aria-label="Back to Home">
+                <span class="hud-back-icon">⌂</span>
+                <span class="hud-back-text">Home</span>
+            </button>
+            <div class="hud-stats">
+                <div class="hud-stat">
+                    <span class="hud-stat-label">Score</span>
+                    <span id="score-val" class="hud-stat-val">0</span>
+                    <span id="score-bonus" class="score-bonus hidden"></span>
+                </div>
+                <div class="hud-stat">
+                    <span class="hud-stat-label">Best</span>
+                    <span id="best-score-val" class="hud-stat-val">0</span>
+                </div>
+                <div class="hud-stat">
+                    <span class="hud-stat-label">Level</span>
+                    <span id="level-val" class="hud-stat-val">1</span>
+                </div>
+                <div class="hud-stat hud-stat-progress">
+                    <span class="hud-stat-label">Q</span>
+                    <span id="progress-val" class="hud-stat-val">1/6</span>
+                </div>
+            </div>
+            <div class="hud-timer">
+                <span class="hud-timer-label">Time</span>
+                <div class="hud-timer-value-wrap">
+                    <span id="question-timer-text" class="hud-timer-num">90</span>
+                    <div class="hud-timer-track">
+                        <div id="question-timer-fill" class="hud-timer-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ui-layer">
+        
+        <!-- Homepage -->
+        <div id="homepage" class="interactive">
+            <div class="glass-card home-card">
+                <h1 class="logo">CUBE IQ</h1>
+                <p class="tagline">Brain Trainer</p>
+                <div class="home-stats">
+                    <div class="home-stats-normal" id="home-stats-normal">
+                        <div class="home-stat"><span class="home-stat-label">මුලු ලකුණු / Total Mark</span><span id="home-total-normal" class="home-stat-value">0</span></div>
+                        <div class="home-stat"><span class="home-stat-label">IQ</span><span id="home-iq-normal" class="home-stat-value">--</span></div>
+                        <div class="home-stat home-stat-coins"><span class="home-stat-label">කාසි / Coins</span><span id="home-coins-normal" class="home-stat-value">0</span></div>
+                    </div>
+                </div>
+                <p class="desc">ගැටලුව වර්ගය තෝරන්න</p>
+                <div class="game-types">
+                    <div class="game-type-card" onclick="doAfterPress(function(){ goToGame('patterns'); })">
+                        <div class="game-icon">🔢</div>
+                        <div class="game-name">Number Patterns</div>
+                        <div class="game-name-si">සංඛ්‍යා රටා</div>
+                    </div>
+                    <div class="game-type-card" onclick="doAfterPress(function(){ goToGame('mathPuzzles'); })">
+                        <div class="game-icon">🧩</div>
+                        <div class="game-name">Math Puzzles</div>
+                        <div class="game-name-si">ගණිත පෙහෙළිකා</div>
+                    </div>
+                    <div class="game-type-card" onclick="doAfterPress(function(){ goToGame('mathVerify'); })">
+                        <div class="game-icon">✓✗</div>
+                        <div class="game-name">Math Verification</div>
+                        <div class="game-name-si">නිවැරදි ගණිත ගැටලු පරීක්ෂා කිරීම</div>
+                    </div>
+                    <div class="game-type-card" onclick="doAfterPress(function(){ goToGame('calculator'); })">
+                        <div class="game-icon">🧮</div>
+                        <div class="game-name">Calculator Cube</div>
+                        <div class="game-name-si">Calculator Cube</div>
+                    </div>
+                    <div class="game-type-card" onclick="doAfterPress(function(){ goToGame('colorCube'); })">
+                        <div class="game-icon">🎨</div>
+                        <div class="game-name">Color Cube</div>
+                        <div class="game-name-si">පාට ඝනකය</div>
+                    </div>
+                </div>
+                <div class="home-gifts" id="home-gifts">
+                    <span class="home-gifts-label">🎁 තෑගි / Gifts</span>
+                    <div class="gift-slots" id="gift-slots"></div>
+                </div>
+                <button type="button" class="btn-marketplace" onclick="doAfterPress(openMarketplace)">
+                    🎨 Skin Marketplace
+                </button>
+            </div>
+        </div>
+
+        <!-- Skin Marketplace -->
+        <div id="marketplace" class="hidden interactive">
+            <div class="glass-card marketplace-card">
+                <h2 class="marketplace-title">🎨 Cube Skin Marketplace</h2>
+                <div class="marketplace-coins">
+                    <span class="marketplace-coins-label">කාසි / Coins</span>
+                    <span id="marketplace-coins-val" class="marketplace-coins-val">0</span>
+                </div>
+                <div id="marketplace-grid" class="marketplace-grid"></div>
+                <button type="button" class="btn-back" onclick="doAfterPress(closeMarketplace)">← Back to Home</button>
+            </div>
+        </div>
+
+        <!-- Results fullscreen (IQ + Total Mark – simple big numbers) -->
+        <div id="meter-fullscreen" class="meter-fullscreen hidden">
+            <div class="meter-fullscreen-inner">
+                <div class="result-block result-iq">
+                    <span class="result-label">IQ</span>
+                    <span id="home-iq" class="result-value">--</span>
+                </div>
+                <div class="result-block result-score">
+                    <span class="result-label">මුලු ලකුණු / Total Mark</span>
+                    <span id="home-best-score" class="result-value">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gift opened: full-screen 3D box, then reward card -->
+        <div id="gift-opened-overlay" class="gift-opened-overlay hidden interactive">
+            <div id="gift-box-3d-container" class="gift-box-3d-fullscreen">
+                <p class="gift-box-tap-hint" id="gift-box-tap-hint">Tap to open / තට්ටු කරන්න</p>
+            </div>
+            <div class="glass-card gift-opened-card gift-opened-reward-card hidden" id="gift-opened-reward-card">
+                <p class="gift-opened-title">🎁 Gift Opened!</p>
+                <p class="gift-opened-reward" id="gift-opened-reward">+10 කාසි</p>
+                <p class="gift-opened-skin hidden" id="gift-opened-skin"></p>
+                <button type="button" class="btn-close-gift" onclick="closeGiftOpened()">OK</button>
+            </div>
+        </div>
+
+        <!-- Level up celebration -->
+        <div id="level-up-overlay" class="hidden interactive">
+            <div id="confetti-container" style="position:absolute;inset:0;overflow:hidden;"></div>
+            <div id="level-up-coin-scatter" class="level-up-coin-scatter" aria-hidden="true"></div>
+            <div class="level-up-card">
+                <p class="level-up-title">🎉 Level Up!</p>
+                <p class="level-up-msg">Congratulations! / සුබ පැතුම්!</p>
+                <p class="level-up-num" id="level-up-num">2</p>
+                <div class="level-up-rewards">
+                    <div class="level-up-coins">
+                        <span class="level-up-coins-label">+8 කාසි</span>
+                        <span id="level-up-coins-val" class="level-up-coins-val">8</span>
+                    </div>
+                    <button type="button" class="btn-level-up-ad" id="btn-level-up-ad">ඇඩ් බලා 3× ලබා ගන්න (24 කාසි)</button>
+                </div>
+                <div class="level-up-gift-wrap">
+                    <span class="level-up-gift-icon">🎁</span>
+                    <p class="level-up-gift" id="level-up-gift">තෑගි ලැබුණා! / Gift received!</p>
+                </div>
+                <button type="button" class="btn-next-level" id="btn-next-level">Next Level →</button>
+            </div>
+        </div>
+
+        <!-- Color Cube: net view (6 faces flat) -->
+        <div id="color-cube-net-screen" class="color-cube-net-screen hidden">
+            <p class="color-cube-net-hint">ඝනකයේ මුහුණත් බලන්න / Memorize the faces</p>
+            <div class="color-cube-net">
+                <div class="net-row">
+                    <div class="net-cell empty"></div>
+                    <div class="net-cell net-face" data-face="4" id="net-face-4"></div>
+                    <div class="net-cell empty"></div>
+                    <div class="net-cell empty"></div>
+                </div>
+                <div class="net-row">
+                    <div class="net-cell net-face" data-face="1" id="net-face-1"></div>
+                    <div class="net-cell net-face" data-face="3" id="net-face-3"></div>
+                    <div class="net-cell net-face" data-face="0" id="net-face-0"></div>
+                    <div class="net-cell net-face" data-face="2" id="net-face-2"></div>
+                </div>
+                <div class="net-row">
+                    <div class="net-cell empty"></div>
+                    <div class="net-cell net-face" data-face="5" id="net-face-5"></div>
+                    <div class="net-cell empty"></div>
+                    <div class="net-cell empty"></div>
+                </div>
+            </div>
+            <button type="button" class="btn-net-continue" id="btn-net-continue">ඝනකය සෑදෙයි / Form cube</button>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="hidden interactive">
+            <div class="glass-card start-card">
+                <h1>CUBE IQ</h1>
+                <p id="selected-game-name" class="tagline" style="margin-bottom:1rem"></p>
+                <button onclick="doAfterPress(startGame)" class="btn-start">START GAME</button>
+                <button onclick="doAfterPress(backToHome)" class="btn-back">← Back to Home</button>
+            </div>
+        </div>
+
+        <!-- Number Patterns: 2D pattern card (no cube texture) -->
+        <div id="number-pattern-card" class="number-pattern-card hidden">
+            <p class="number-pattern-label">රටාව සොයන්න / Find the pattern</p>
+            <div class="number-pattern-grid">
+                <div class="number-pattern-cell" id="pattern-cell-0">?</div>
+                <div class="number-pattern-cell" id="pattern-cell-1">?</div>
+                <div class="number-pattern-cell" id="pattern-cell-2">?</div>
+                <div class="number-pattern-cell" id="pattern-cell-3">?</div>
+            </div>
+        </div>
+
+        <!-- Options Container -->
+        <div id="game-controls" class="hidden interactive">
+            <p id="color-cube-question" class="color-cube-question hidden"></p>
+            <div id="options-grid"></div>
+            <div class="lifeline-row">
+                <button type="button" class="btn-lifeline" id="btn-5050">50:50</button>
+                <button type="button" class="btn-lifeline" id="btn-extra-time">+ කාලය</button>
+                <button type="button" class="btn-lifeline" id="btn-skip-hard">අමාරු ප්‍රශ්න මඟහරින්න</button>
+            </div>
+        </div>
+
+        <!-- Skip question: watch ad to skip -->
+        <div id="skip-question-ad-screen" class="hidden interactive" style="position:absolute;inset:0;display:flex;padding:1.5rem;">
+            <div class="glass-card">
+                <p class="skip-msg" id="skip-question-msg">ඇඩ් එකක් බලා මෙම ප්‍රශ්නය මගහරින්න.<br>Watch an ad to skip this question.</p>
+                <div class="skip-buttons">
+                    <button type="button" class="btn-watch-ad-skip" id="btn-watch-ad-skip">ඇඩ් එක බලන්න / Watch ad</button>
+                    <button type="button" class="btn-cancel-skip" id="btn-cancel-skip">අවලංගු / Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ad offer: watch ad to play again -->
+        <div id="ad-offer-screen" class="hidden interactive" style="position:absolute;inset:0;display:flex;padding:1.5rem;">
+            <div class="glass-card ad-offer-card">
+                <p class="ad-offer-title">GAME OVER!</p>
+                <div class="ad-offer-score" id="ad-offer-score">0</div>
+                <p class="ad-offer-msg">ඇඩ් එකක් බලා වෙනත් ප්‍රශ්නයක් ලබා ගන්න.<br>Watch an ad to get a different question!</p>
+                <div class="ad-offer-buttons">
+                    <button type="button" class="btn-watch-ad" id="btn-watch-ad">ඇඩ් එක බලන්න / Watch ad</button>
+                    <button type="button" class="btn-skip-ad" id="btn-skip-ad">මඟ අරින්න / Skip</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="over-screen" class="hidden interactive">
+            <div class="glass-card over-card">
+                <h2>GAME OVER!</h2>
+                <div id="final-score">0</div>
+                <p id="iq-msg"></p>
+                <button onclick="doAfterPress(startGame)" class="btn-retry">TRY AGAIN</button>
+                <button onclick="doAfterPress(backToHome)" class="btn-back" style="margin-top:0.5rem">← Back to Home</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="fb-instant.js"></script>
+    <script src="number-patterns-questions.js"></script>
+    <script src="skin-marketplace.js"></script>
+    <script src="game-storage.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
